@@ -1,0 +1,72 @@
+.queuePanel {
+  padding: 16px;
+}
+
+.queueHeader {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.queueEmpty {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.queueList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queueRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.queueItem {
+  flex: 1;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.queueItem.isCurrent {
+  background: #f3f4f6;
+  font-weight: 800;
+}
+
+.queueItemInner {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.queueTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueNumber {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.queueRemove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #9ca3af;
+  padding: 0 6px;
+}
+
+.queueRemove:hover {
+  color: #111827;
+}

@@ -1,0 +1,224 @@
+/* sidebar.css */
+
+.sidebar {
+  border-right: 1px solid #e5e7eb;
+  padding: 16px;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.sidebarInner {
+  max-width: 240px;
+  min-width: 0;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-width: 0; /* important for flex shrink */
+}
+
+.brand {
+  font-weight: 800;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.createBtn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0; /* prevents text clipping */
+}
+
+
+
+.navBtn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.navBtn.active {
+  background: #f3f4f6;
+}
+
+.tip {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.modalCard {
+  width: min(420px, 100%);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.modalTitle {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+
+.modalInput:focus {
+  border-color: #111827;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ghostBtn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ghostBtn:hover {
+  background: #f3f4f6;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+.sectionHeader {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.ghostMiniBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.ghostMiniBtn:hover {
+  background: #f3f4f6;
+}
+
+.ctxMenu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.ctxItem {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 10px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ctxItem:hover {
+  background: #f3f4f6;
+}
+
+.ctxItem.danger {
+  color: #b91c1c;
+}
+
+.ctxItem.danger:hover {
+  background: #fee2e2;
+}
+
+
+.modalBody {
+  font-size: 13px;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.modalSubtle {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Red primary-style button for destructive actions */
+.dangerBtn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #b91c1c;
+  background: #b91c1c;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.dangerBtn:hover {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+

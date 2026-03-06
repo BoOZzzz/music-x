@@ -1,0 +1,61 @@
+/* layout.css */
+
+.appShell {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.appTop {
+  display: grid;
+
+  /* KEY: minmax(0, 1fr) lets the middle actually shrink */
+  grid-template-columns: clamp(200px, 18vw, 240px) minmax(0, 1fr) 0px;
+
+  min-height: 0;
+  min-width: 0;
+
+  /* When window is too small, scroll horizontally instead of stacking */
+  overflow-x: auto;
+}
+
+.appTop.withQueue {
+  grid-template-columns: clamp(200px, 18vw, 240px) 1fr clamp(280px, 26vw, 420px);
+}
+
+.main {
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mainInner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 22px 24px 24px;
+}
+
+.rightPanel {
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Don’t show border when collapsed (prevents subtle overflow issues) */
+.appTop:not(.withQueue) .rightPanel {
+  border-left: none;
+}
+
+.appTop.withQueue .rightPanel {
+  border-left: 1px solid #e5e7eb;
+}
+
+.playerBar {
+  border-top: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+

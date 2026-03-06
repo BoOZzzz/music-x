@@ -1,0 +1,146 @@
+/* songtable.css */
+
+.songTableCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: white;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.songTableEmpty {
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
+  padding: 16px;
+  color: #6b7280;
+}
+
+.songTableHeader {
+  display: grid;
+  grid-template-columns: 26px 1fr 120px 60px 90px;
+  padding: 12px;
+  background: #f9fafb;
+  font-weight: 700;
+  align-items: center;
+  min-width: 0;
+}
+
+.songRow {
+  display: grid;
+  grid-template-columns: 26px 1fr 120px 60px 90px;
+  padding: 12px;
+  border-top: 1px solid #f3f4f6;
+  align-items: center;
+  cursor: pointer;
+  user-select: auto;
+  min-width: 0;
+  background: white;
+}
+
+.songRow.isCurrent {
+  background: #f3f4f6;
+}
+
+.songRow.dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
+
+.songRow.dropTarget {
+  outline: 2px solid #93c5fd;
+  outline-offset: -2px;
+  background: #eff6ff;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: grab;
+  user-select: none;
+}
+
+.dragHandle.disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.titleCell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.titleText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  cursor: text;
+  user-select: text;
+}
+
+.titleInput {
+  width: min(600px, 100%);
+  max-width: 100%;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  outline: none;
+}
+
+.colDuration {
+  color: #6b7280;
+}
+
+
+.ctxMenu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 160px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+}
+
+.ctxItem {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.ctxItem:hover {
+  background: #f3f4f6;
+}
+
+.ctxItem.danger {
+  color: #b91c1c;
+}
+
+.ctxItem.danger:hover {
+  background: #fee2e2;
+}
+
+.deleteBtn {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.deleteBtn:hover {
+  background: #f9fafb;
+}
+
