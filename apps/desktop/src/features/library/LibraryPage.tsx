@@ -65,7 +65,7 @@ export function LibraryPage() {
     };
 
     dispatch({ type: "ADD_TRACK", track });
-    dispatch({ type: "PLAY_TRACK", trackId: track.id });
+    
 
     await refresh();
     // optional: reload order so newly added track gets placed properly

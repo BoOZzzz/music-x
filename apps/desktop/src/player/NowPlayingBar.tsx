@@ -19,14 +19,6 @@ export function NowPlayingBar() {
   const disableTransport = !currentTrack;
   const disableShuffle = state.player.queue.length === 0;
 
-  const shuffleArray = <T,>(arr: T[]) => {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
 
   useEffect(() => {
   const onKeyDown = (e: KeyboardEvent) => {
