@@ -6,6 +6,13 @@ import { fmtTime } from "../../state/utils";
 
 const LIBRARY_PLAYLIST_ID = "library";
 
+type SongTableProps = {
+  tracks: Track[];
+  playlistId?: string; // defaults to library
+  onRefresh?: () => Promise<void>;
+};
+
+
 function moveItem<T>(arr: T[], from: number, to: number) {
   const copy = arr.slice();
   const [item] = copy.splice(from, 1);
@@ -13,7 +20,11 @@ function moveItem<T>(arr: T[], from: number, to: number) {
   return copy;
 }
 
-export function SongTable({ tracks }: { tracks: Track[] }) {
+export function SongTable({
+  tracks,
+  playlistId = LIBRARY_PLAYLIST_ID,
+  onRefresh,
+}: SongTableProps) {
   const { state, dispatch } = useMusic();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,6 +36,7 @@ export function SongTable({ tracks }: { tracks: Track[] }) {
   const [ctx, setCtx] = useState<null | { x: number; y: number; trackId: string }>(null);
 
   const isDraggingRef = useRef(false);
+  const isLibrary = playlistId === LIBRARY_PLAYLIST_ID;
   
   useEffect(() => {
     const onDown = () => setCtx(null);
@@ -59,7 +71,7 @@ export function SongTable({ tracks }: { tracks: Track[] }) {
     try {
       await window.musicx.updateTrackTitle(editingId, next);
       dispatch({ type: "UPDATE_TRACK", trackId: editingId, patch: { title: next } });
-
+      await onRefresh?.();
       setEditingId(null);
       setDraftTitle("");
     } catch (e) {
@@ -68,49 +80,27 @@ export function SongTable({ tracks }: { tracks: Track[] }) {
   };
 
   const displayTracks = useMemo(() => {
-    const order = state.libraryOrder;
-    if (!order || order.length === 0) return tracks;
-
-    const byId: Record<string, Track> = {};
-    for (const t of tracks) byId[t.id] = t;
-
-    const ordered = order.map((id) => byId[id]).filter(Boolean);
-
-    const inOrder = new Set(order);
-    const leftovers = tracks.filter((t) => !inOrder.has(t.id));
-    return ordered.concat(leftovers);
-  }, [state.libraryOrder, tracks]);
+    return tracks;
+  }, [tracks]);
 
   const commitDisplayReorder = async (from: number, to: number) => {
     if (from === to) return;
 
-    const visibleIds = displayTracks.map((t) => t.id);
+    const ids = displayTracks.map((t) => t.id);
+    if (from < 0 || to < 0 || from >= ids.length || to >= ids.length) return;
 
-    const currentOrder = state.libraryOrder.length
-      ? [
-          ...state.libraryOrder.filter((id) => visibleIds.includes(id)),
-          ...visibleIds.filter((id) => !state.libraryOrder.includes(id)),
-        ]
-      : visibleIds;
+    const next = moveItem(ids, from, to);
 
-    if (from < 0 || to < 0 || from >= currentOrder.length || to >= currentOrder.length) return;
-
-    const next = moveItem(currentOrder, from, to);
-
-    // ✅ update UI immediately
-    dispatch({ type: "SET_LIBRARY_ORDER", order: next });
-    console.log("lib order change success");
-
-    // ✅ persist to DB
-    const res = await window.musicx.setPlaylistOrder(LIBRARY_PLAYLIST_ID, next);
+    const res = await window.musicx.setPlaylistOrder(playlistId, next);
     if (!res?.ok) {
       console.warn("Failed to persist order:", res?.reason);
+      return;
+    }
+
+    if (onRefresh) {
+      await onRefresh();
     }
   };
-
-  if (tracks.length === 0) {
-    return <div className="songTableEmpty">No songs yet.</div>;
-  }
 
   
 
@@ -123,6 +113,12 @@ export function SongTable({ tracks }: { tracks: Track[] }) {
         <div className="colMoreHeader" />
         <div className="colActionsHeader" />
       </div>
+
+      {displayTracks.length === 0 && (
+        <div className="songTableEmpty">
+          This playlist has no songs.
+        </div>
+      )}
 
       {displayTracks.map((t, i) => {
         const isCurrent = state.player.currentTrackId === t.id;
@@ -239,30 +235,41 @@ export function SongTable({ tracks }: { tracks: Track[] }) {
           style={{ left: ctx.x, top: ctx.y }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <button
-            className="ctxItem danger"
-            onClick={async (e) => {
-              e.stopPropagation();
-              setCtx(null);
+          {isLibrary ? (
+            <button
+              className="ctxItem danger"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setCtx(null);
 
-              const res = await window.musicx.deleteTrack(ctx.trackId);
-              if (res.ok) {
-                const items = await window.musicx.listLibraryTracks();
-                const nextTracks = items.map((it) => ({
-                  id: it.id,
-                  title: it.title,
-                  sourceUrl: `musicx://track?path=${encodeURIComponent(it.fs_path)}`,
-                  addedAt: it.added_at,
-                  fsPath: it.fs_path,
-                }));
-                dispatch({ type: "SET_TRACKS", tracks: nextTracks });
-              } else {
-                console.log("Delete failed:", res.reason);
-              }
-            }}
-          >
-            Delete
-          </button>
+                const res = await window.musicx.deleteTrack(ctx.trackId);
+                if (res.ok) {
+                  await onRefresh?.();
+                } else {
+                  console.log("Delete failed:", res.reason);
+                }
+              }}
+            >
+              Delete
+            </button>
+          ) : (
+            <button
+              className="ctxItem danger"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setCtx(null);
+
+                const res = await window.musicx.removeTrackFromPlaylist(playlistId, ctx.trackId);
+                if (res?.ok) {
+                  await onRefresh?.();
+                } else {
+                  console.log("Remove failed:", res?.reason);
+                }
+              }}
+            >
+              Remove from playlist
+            </button>
+          )}
         </div>
       )}
     </div>

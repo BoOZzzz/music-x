@@ -3,7 +3,7 @@ import { LibraryPage } from "./features/library/LibraryPage";
 import { NowPlayingBar } from "./player/NowPlayingBar";
 import { QueuePanel } from "./features/queue/QueuePanel";
 import { Sidebar } from "./features/sidebar/Sidebar";
-
+import { PlaylistPage } from "./features/library/PlaylistPage";
 
 export function AppShell() {
 
@@ -16,7 +16,14 @@ export function AppShell() {
 
         <main className="main">
           <div className="mainInner">
-            {state.view.kind === "library" ? <LibraryPage /> : <div>Playlists UI next.</div>}
+
+            {state.view.kind === "library" && <LibraryPage />}
+
+            {state.view.kind === "playlist" && (
+              <PlaylistPage playlistId={state.view.playlistId} />
+            )}
+
+            {state.view.kind === "playlists" && <div>Playlists UI next.</div>}
           </div>
         </main>
 

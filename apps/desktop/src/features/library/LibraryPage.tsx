@@ -1,3 +1,4 @@
+//LibraryPage.tsx
 import { useEffect } from "react";
 import { useMusic } from "../../state/MusicProvider";
 import type { Track } from "../../state/types";
@@ -30,7 +31,6 @@ export function LibraryPage() {
     }));
 
     dispatch({ type: "SET_TRACKS", tracks });
-    await loadPersistedOrder();
   }
 
   async function loadPersistedOrder() {
@@ -56,30 +56,13 @@ export function LibraryPage() {
       return;
     }
 
-    const track: Track = {
-      id: row.id,
-      title: row.title,
-      sourceUrl: toMusicxUrlFromFsPath(row.fs_path),
-      addedAt: row.added_at,
-      fsPath: row.fs_path,
-    };
-
-    dispatch({ type: "ADD_TRACK", track });
-    
-
     await refresh();
-    // optional: reload order so newly added track gets placed properly
-    await loadPersistedOrder();
   };
 
   const trackList = Object.values(state.tracks);
 
   useEffect(() => {
-    (async () => {
-      await rescanAndRefresh();
-      await loadPersistedOrder();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void rescanAndRefresh();
   }, []);
 
   return (
@@ -98,7 +81,11 @@ export function LibraryPage() {
             </button>
           </div>
         </div>
-        <SongTable tracks={trackList} />
+        <SongTable
+          tracks={trackList}
+          playlistId={LIBRARY_PLAYLIST_ID}
+          onRefresh={refresh}
+        />
       </div>
     </div>
   );
