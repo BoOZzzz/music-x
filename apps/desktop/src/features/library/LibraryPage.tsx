@@ -33,10 +33,6 @@ export function LibraryPage() {
     dispatch({ type: "SET_TRACKS", tracks });
   }
 
-  async function loadPersistedOrder() {
-    const ids = await window.musicx.getPlaylistTrackIds(LIBRARY_PLAYLIST_ID);
-    dispatch({ type: "SET_LIBRARY_ORDER", order: ids ?? [] });
-  }
 
   
   async function rescanAndRefresh() {

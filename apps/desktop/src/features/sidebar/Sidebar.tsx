@@ -1,6 +1,8 @@
 // Sidebar.tsx
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMusic } from "../../state/MusicProvider";
+import { useGlobalContextMenu } from "../ctxmenu/GlobalContextMenu";
+import type { ContextMenuItem } from "../ctxmenu/ContextMenu";
 import "../../css/sidebar.css";
 
 
@@ -13,26 +15,16 @@ type PlaylistRow = {
   created_at: number;
 };
 
-type CtxMenuState =
-  | null
-  | {
-      x: number;
-      y: number;
-      playlist: PlaylistRow;
-    };
 
 export function Sidebar() {
   const { state, dispatch } = useMusic();
-
+  const { showContextMenu } = useGlobalContextMenu();
   const [showCreate, setShowCreate] = useState(false);
   const [playlistName, setPlaylistName] = useState("");
 
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [playlists, setPlaylists] = useState<PlaylistRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-
-  const [ctxMenu, setCtxMenu] = useState<CtxMenuState>(null);
-  const ctxRef = useRef<HTMLDivElement | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlaylistRow | null>(null);
 
 
@@ -97,45 +89,32 @@ export function Sidebar() {
   const playlistActive = (id: string) =>
     state.view.kind === "playlist" && state.view.playlistId === id;
 
+  const requestDeletePlaylist = (playlist: PlaylistRow) => {
+    setDeleteTarget(playlist);
+  };
 
-  // ---- Context menu handlers ----
   const openCtxMenu = (e: React.MouseEvent, playlist: PlaylistRow) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Prevent deleting library (even though DB protects it)
     if (playlist.id === LIBRARY_PLAYLIST_ID) return;
+    // CHANGE: still guard library from deletion
 
-    // Use viewport coords; menu is position: fixed
-    setCtxMenu({ x: e.clientX, y: e.clientY, playlist });
-  };
+    const items: ContextMenuItem[] = [
+      {
+        label: "Delete",
+        danger: true,
+        onClick: () => {
+          requestDeletePlaylist(playlist);
+        },
+      },
+    ];
 
-  const closeCtxMenu = () => setCtxMenu(null);
-
-  useEffect(() => {
-    if (!ctxMenu) return;
-
-    const onMouseDown = (ev: MouseEvent) => {
-      // close on outside click
-      if (!ctxRef.current) return closeCtxMenu();
-      if (!ctxRef.current.contains(ev.target as Node)) closeCtxMenu();
-    };
-
-    const onKeyDown = (ev: KeyboardEvent) => {
-      if (ev.key === "Escape") closeCtxMenu();
-    };
-
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [ctxMenu]);
-
-  const requestDeletePlaylist = (playlist: PlaylistRow) => {
-  closeCtxMenu();
-  setDeleteTarget(playlist);
+    showContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items,
+    });
   };
 
   const closeDelete = () => setDeleteTarget(null);
@@ -208,22 +187,7 @@ export function Sidebar() {
 
         <div className="tip">Tip: Pick files to add them to your library.</div>
       </div>
-      {/* Context menu */}
-      {ctxMenu && (
-        <div
-          ref={ctxRef}
-          className="ctxMenu"
-          style={{ left: ctxMenu.x, top: ctxMenu.y }}
-          role="menu"
-        >
-          <button
-            className="ctxItem danger"
-            onClick={() => requestDeletePlaylist(ctxMenu.playlist)}
-          >
-            Delete
-          </button>
-        </div>
-      )}
+      
       
       {deleteTarget && (
         <div className="modalOverlay" onMouseDown={closeDelete}>

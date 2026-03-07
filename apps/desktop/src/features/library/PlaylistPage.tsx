@@ -1,3 +1,4 @@
+// features/library/PlaylistPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import type { Track } from "../../state/types";
 import { useMusic } from "../../state/MusicProvider"; 
@@ -6,10 +7,6 @@ import { SongTable } from "./SongTable";
 type PlaylistPageProps = {
   playlistId: string;
 };
-
-function toMusicxUrlFromFsPath(fsPath: string) {
-  return `musicx://track?path=${encodeURIComponent(fsPath)}`;
-}
 
 export function PlaylistPage({ playlistId }: PlaylistPageProps) {
   const { state, dispatch } = useMusic();

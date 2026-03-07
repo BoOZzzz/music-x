@@ -1,0 +1,43 @@
+.ctxMenu {
+  position: fixed;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  padding: 6px;
+  z-index: 1000;
+}
+
+.ctxItem {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ctxItem:hover {
+  background: #f3f4f6;
+}
+
+.ctxItem.danger {
+  color: #dc2626;
+}
+
+.submenuArrow {
+  opacity: 0.7;
+}
+
+.ctxSubmenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  min-width: 180px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}

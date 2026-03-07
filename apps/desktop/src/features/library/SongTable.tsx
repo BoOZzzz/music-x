@@ -1,10 +1,19 @@
 // songTable.tsx
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Track } from "../../state/types";
 import { useMusic } from "../../state/MusicProvider";
 import { fmtTime } from "../../state/utils";
+import { ContextMenuItem } from "../ctxmenu/ContextMenu";
+import { useGlobalContextMenu } from "../ctxmenu/GlobalContextMenu";
+
 
 const LIBRARY_PLAYLIST_ID = "library";
+
+type PlaylistRow = {
+  id: string;
+  name: string;
+  created_at: number;
+};
 
 type SongTableProps = {
   tracks: Track[];
@@ -26,30 +35,18 @@ export function SongTable({
   onRefresh,
 }: SongTableProps) {
   const { state, dispatch } = useMusic();
+  const { showContextMenu } = useGlobalContextMenu();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
-
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
-  const [ctx, setCtx] = useState<null | { x: number; y: number; trackId: string }>(null);
 
+  const playlistsRef = useRef<PlaylistRow[]>([]);
   const isDraggingRef = useRef(false);
-  const isLibrary = playlistId === LIBRARY_PLAYLIST_ID;
-  
-  useEffect(() => {
-    const onDown = () => setCtx(null);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setCtx(null);
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, []);
+
+
   
   const startEdit = (t: Track) => {
     if (isDraggingRef.current) return;
@@ -102,7 +99,60 @@ export function SongTable({
     }
   };
 
-  
+  const buildMenu = async (trackId: string): Promise<ContextMenuItem[]> => {
+    if (playlistsRef.current.length === 0) {
+      const playlists = await window.musicx.listPlaylists();
+      playlistsRef.current = playlists.filter(p => p.id !== LIBRARY_PLAYLIST_ID);
+    }
+
+    const visible = playlistsRef.current;
+
+    if (playlistId === LIBRARY_PLAYLIST_ID) {
+      return [
+        {
+          label: "Add to playlist",
+          submenu: visible.map((p) => ({
+            label: p.name,
+            onClick: async () => {
+              const res = await window.musicx.addTrackToPlaylist(p.id, trackId);
+
+              if (!res?.ok) {
+                console.log("Add to playlist failed:", res?.reason);
+              }
+            },
+          })),
+        },
+        {
+          label: "Delete",
+          danger: true,
+          onClick: async () => {
+            const res = await window.musicx.deleteTrack(trackId);
+
+            if (res.ok) {
+              await onRefresh?.();
+            } else {
+              console.log("Delete failed:", res?.reason);
+            }
+          },
+        }
+      ];
+    }
+
+    return [
+      {
+        label: "Remove from playlist",
+        danger: true,
+        onClick: async () => {
+          const res = await window.musicx.removeTrackFromPlaylist(
+            playlistId,
+            trackId
+          );
+
+          if (res.ok) await onRefresh?.();
+        }
+      }
+    ];
+  };
 
   return (
     <div className="songTableCard">
@@ -164,11 +214,17 @@ export function SongTable({
               dispatch({ type: "SET_QUEUE", queue, queueIndex: Math.max(0, idx) });
               dispatch({ type: "PLAY_TRACK", trackId: t.id });
             }}
-            onContextMenu={(e) => {
+            onContextMenu={async (e) => {
               e.preventDefault();
               e.stopPropagation();
               if (isDraggingRef.current) return;
-              setCtx({ x: e.clientX, y: e.clientY, trackId: t.id });
+
+              const items = await buildMenu(t.id);   
+              showContextMenu({
+                x: e.clientX,
+                y: e.clientY,
+                items,
+              });
             }}
           >
             <span
@@ -229,49 +285,7 @@ export function SongTable({
           </div>
         );
       })}
-      {ctx && (
-        <div
-          className="ctxMenu"
-          style={{ left: ctx.x, top: ctx.y }}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {isLibrary ? (
-            <button
-              className="ctxItem danger"
-              onClick={async (e) => {
-                e.stopPropagation();
-                setCtx(null);
-
-                const res = await window.musicx.deleteTrack(ctx.trackId);
-                if (res.ok) {
-                  await onRefresh?.();
-                } else {
-                  console.log("Delete failed:", res.reason);
-                }
-              }}
-            >
-              Delete
-            </button>
-          ) : (
-            <button
-              className="ctxItem danger"
-              onClick={async (e) => {
-                e.stopPropagation();
-                setCtx(null);
-
-                const res = await window.musicx.removeTrackFromPlaylist(playlistId, ctx.trackId);
-                if (res?.ok) {
-                  await onRefresh?.();
-                } else {
-                  console.log("Remove failed:", res?.reason);
-                }
-              }}
-            >
-              Remove from playlist
-            </button>
-          )}
-        </div>
-      )}
+      
     </div>
   );
 }
