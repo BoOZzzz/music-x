@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import type { Track } from "../../state/types";
 import { useMusic } from "../../state/MusicProvider";
 import { fmtTime } from "../../state/utils";
-import { ContextMenuItem } from "../ctxmenu/ContextMenu";
+import type { ContextMenuItem } from "../ctxmenu/ContextMenu";
 import { useGlobalContextMenu } from "../ctxmenu/GlobalContextMenu";
 
 
@@ -46,7 +46,11 @@ export function SongTable({
   const playlistsRef = useRef<PlaylistRow[]>([]);
   const isDraggingRef = useRef(false);
 
-
+  const dragPayloadFor = (trackId: string) =>
+    JSON.stringify({
+      trackId,
+      fromPlaylistId: playlistId,
+  });
   
   const startEdit = (t: Track) => {
     if (isDraggingRef.current) return;
@@ -235,8 +239,12 @@ export function SongTable({
                 isDraggingRef.current = true;
                 setDragIndex(i);
                 setOverIndex(i);
-                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.effectAllowed = "copyMove";
                 e.dataTransfer.setData("text/plain", String(i));
+                e.dataTransfer.setData(
+                  "application/x-musicx-track",
+                  dragPayloadFor(t.id)
+                );
                 document.body.style.cursor = "grabbing";
               }}
               onDragEnd={() => {

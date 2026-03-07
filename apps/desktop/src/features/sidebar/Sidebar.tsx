@@ -26,6 +26,7 @@ export function Sidebar() {
   const [playlists, setPlaylists] = useState<PlaylistRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlaylistRow | null>(null);
+  const [dropTargetPlaylistId, setDropTargetPlaylistId] = useState<string | null>(null);
 
 
   const openCreate = () => {
@@ -117,6 +118,76 @@ export function Sidebar() {
     });
   };
 
+  const hasDraggedTrack = (e: React.DragEvent) => {
+    return Array.from(e.dataTransfer.types).includes("application/x-musicx-track");
+  };
+
+  const readDraggedTrack = (e: React.DragEvent) => {
+    const raw = e.dataTransfer.getData("application/x-musicx-track");
+    // CHANGE: Sidebar reads the custom drag payload written by SongTable
+
+    if (!raw) return null;
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        trackId?: string;
+        fromPlaylistId?: string;
+      };
+
+      if (!parsed.trackId) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
+  const handlePlaylistDragOver = (e: React.DragEvent, playlistId: string) => {
+    if (!hasDraggedTrack(e)) return;
+    
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDropTargetPlaylistId(playlistId);
+  };
+
+  const handlePlaylistDragLeave = (e: React.DragEvent, playlistId: string) => {
+    const related = e.relatedTarget as Node | null;
+    if (related && e.currentTarget.contains(related)) return;
+    // CHANGE: ignore leave events caused by moving inside the same button
+
+    setDropTargetPlaylistId((current) =>
+      current === playlistId ? null : current
+    );
+  };
+
+  const handlePlaylistDrop = async (e: React.DragEvent, playlist: PlaylistRow) => {
+    e.preventDefault();
+    setDropTargetPlaylistId(null);
+    
+    const payload = readDraggedTrack(e);
+    if (!payload?.trackId) return;
+
+    if (payload.fromPlaylistId === playlist.id) return;
+    // CHANGE: dropping onto the same playlist does nothing
+
+    const res = await window.musicx.addTrackToPlaylist(playlist.id, payload.trackId);
+
+    if (!res?.ok) {
+      console.log("Add to playlist failed:", res?.reason);
+      return;
+    }
+
+    // Optional behavior:
+    // if the target playlist is currently open, re-navigate so your existing
+    // playlist page flow can refresh/reload its contents
+    if (state.view.kind === "playlist" && state.view.playlistId === playlist.id) {
+      dispatch({
+        type: "NAVIGATE",
+        view: { kind: "playlist", playlistId: playlist.id },
+      });
+    }
+  };
+
   const closeDelete = () => setDeleteTarget(null);
 
   const confirmDelete = async () => {
@@ -174,9 +245,19 @@ export function Sidebar() {
             {visiblePlaylists.map((p) => (
               <button
                 key={p.id}
-                className={`navBtn playlistBtn ${playlistActive(p.id) ? "active" : ""}`}
+                className={`navBtn playlistBtn ${playlistActive(p.id) ? "active" : ""} ${
+                  dropTargetPlaylistId === p.id ? "dropTarget" : ""
+                }`}
                 onClick={() => goPlaylist(p.id)}
                 onContextMenu={(e) => openCtxMenu(e, p)}
+                onDragOver={(e) => handlePlaylistDragOver(e, p.id)}
+                // CHANGE: allows dragged songs to hover over playlists
+
+                onDragLeave={(e) => handlePlaylistDragLeave(e, p.id)}
+                // CHANGE: remove highlight when cursor leaves playlist
+
+                onDrop={(e) => void handlePlaylistDrop(e, p)}
+                // CHANGE: dropping a song here adds it to this playlist
                 title={p.name}
               >
                 {p.name}
