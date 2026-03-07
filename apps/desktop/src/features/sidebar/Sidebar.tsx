@@ -76,6 +76,7 @@ export function Sidebar() {
     await loadPlaylists();
 
     // navigate directly to the created playlist
+    dispatch({ type: "CLEAR_SELECTED_TRACKS" });
     dispatch({
       type: "NAVIGATE",
       view: { kind: "playlist", playlistId: r.playlist.id },
@@ -84,6 +85,7 @@ export function Sidebar() {
 
 
   const goPlaylist = (id: string) => {
+    dispatch({ type: "CLEAR_SELECTED_TRACKS" });
     dispatch({ type: "NAVIGATE", view: { kind: "playlist", playlistId: id } });
   };
 
@@ -124,17 +126,18 @@ export function Sidebar() {
 
   const readDraggedTrack = (e: React.DragEvent) => {
     const raw = e.dataTransfer.getData("application/x-musicx-track");
-    // CHANGE: Sidebar reads the custom drag payload written by SongTable
-
     if (!raw) return null;
 
     try {
       const parsed = JSON.parse(raw) as {
-        trackId?: string;
+        trackIds?: string[];
         fromPlaylistId?: string;
       };
 
-      if (!parsed.trackId) return null;
+      if (!Array.isArray(parsed.trackIds) || parsed.trackIds.length === 0) {
+        return null;
+      }
+
       return parsed;
     } catch {
       return null;
@@ -165,22 +168,23 @@ export function Sidebar() {
     setDropTargetPlaylistId(null);
     
     const payload = readDraggedTrack(e);
-    if (!payload?.trackId) return;
+    if (!payload?.trackIds?.length) return;
 
     if (payload.fromPlaylistId === playlist.id) return;
-    // CHANGE: dropping onto the same playlist does nothing
 
-    const res = await window.musicx.addTrackToPlaylist(playlist.id, payload.trackId);
+    for (const trackId of payload.trackIds) {
+      const res = await window.musicx.addTrackToPlaylist(playlist.id, trackId);
 
-    if (!res?.ok) {
-      console.log("Add to playlist failed:", res?.reason);
-      return;
+      if (!res?.ok) {
+        console.log("Add to playlist failed:", trackId, res?.reason);
+      }
     }
 
     // Optional behavior:
     // if the target playlist is currently open, re-navigate so your existing
     // playlist page flow can refresh/reload its contents
     if (state.view.kind === "playlist" && state.view.playlistId === playlist.id) {
+      dispatch({ type: "CLEAR_SELECTED_TRACKS" });
       dispatch({
         type: "NAVIGATE",
         view: { kind: "playlist", playlistId: playlist.id },
@@ -200,6 +204,7 @@ export function Sidebar() {
     if (r.ok === false) return;
 
     if (state.view.kind === "playlist" && state.view.playlistId === id) {
+      dispatch({ type: "CLEAR_SELECTED_TRACKS" });
       dispatch({ type: "NAVIGATE", view: { kind: "library" } });
     }
 

@@ -46,12 +46,19 @@ export function SongTable({
   const playlistsRef = useRef<PlaylistRow[]>([]);
   const isDraggingRef = useRef(false);
 
-  const dragPayloadFor = (trackId: string) =>
+  const dragPayloadFor = (trackIds: string[]) =>
     JSON.stringify({
-      trackId,
+      trackIds,
       fromPlaylistId: playlistId,
   });
-  
+
+  const isSelected = (trackId: string) =>
+    state.selectedTrackIds.includes(trackId);
+
+  const getTargetTrackIds = (trackId: string) => {
+    return isSelected(trackId) ? state.selectedTrackIds : [trackId];
+  };
+
   const startEdit = (t: Track) => {
     if (isDraggingRef.current) return;
     setEditingId(t.id);
@@ -103,59 +110,69 @@ export function SongTable({
     }
   };
 
-  const buildMenu = async (trackId: string): Promise<ContextMenuItem[]> => {
+  const buildMenu = async (trackIds: string[]): Promise<ContextMenuItem[]> => {
     if (playlistsRef.current.length === 0) {
       const playlists = await window.musicx.listPlaylists();
       playlistsRef.current = playlists.filter(p => p.id !== LIBRARY_PLAYLIST_ID);
     }
 
     const visible = playlistsRef.current;
+    const count = trackIds.length;
 
     if (playlistId === LIBRARY_PLAYLIST_ID) {
       return [
         {
-          label: "Add to playlist",
+          label: count > 1 ? `Add ${count} to playlist` : "Add to playlist",
           submenu: visible.map((p) => ({
             label: p.name,
             onClick: async () => {
-              const res = await window.musicx.addTrackToPlaylist(p.id, trackId);
-
-              if (!res?.ok) {
-                console.log("Add to playlist failed:", res?.reason);
+              for (const trackId of trackIds) {
+                const res = await window.musicx.addTrackToPlaylist(p.id, trackId);
+                if (!res?.ok) {
+                  console.log("Add to playlist failed:", trackId, res?.reason);
+                }
               }
             },
           })),
         },
         {
-          label: "Delete",
+          label: count > 1 ? `Delete ${count} tracks` : "Delete",
           danger: true,
           onClick: async () => {
-            const res = await window.musicx.deleteTrack(trackId);
+            for (const trackId of trackIds) {
+              const res = await window.musicx.deleteTrack(trackId);
 
-            if (res.ok) {
-              await onRefresh?.();
-            } else {
-              console.log("Delete failed:", res?.reason);
+              if (!res.ok) {
+                console.log("Delete failed:", trackId, res?.reason);
+              }
             }
+
+            await onRefresh?.();
+            dispatch({ type: "CLEAR_SELECTED_TRACKS" });
           },
-        }
+        },
       ];
     }
 
     return [
       {
-        label: "Remove from playlist",
+        label: count > 1 ? `Remove ${count} from playlist` : "Remove from playlist",
         danger: true,
         onClick: async () => {
-          const res = await window.musicx.removeTrackFromPlaylist(
-            playlistId,
-            trackId
-          );
+          for (const trackId of trackIds) {
+            const res = await window.musicx.removeTrackFromPlaylist(playlistId, trackId);
 
-          if (res.ok) await onRefresh?.();
-        }
-      }
+            if (!res.ok) {
+              console.log("Remove failed:", trackId, res?.reason);
+            }
+          }
+
+          await onRefresh?.();
+          dispatch({ type: "CLEAR_SELECTED_TRACKS" });
+        },
+      },
     ];
+
   };
 
   return (
@@ -178,13 +195,14 @@ export function SongTable({
         const isCurrent = state.player.currentTrackId === t.id;
         const isEditing = editingId === t.id;
         const isDropTarget = overIndex === i && dragIndex !== null && dragIndex !== i;
-
+        const rowSelected = isSelected(t.id);
         return (
           <div
             key={t.id}
             className={[
               "songRow",
               isCurrent ? "isCurrent" : "",
+              rowSelected ? "isSelected" : "",
               isDropTarget ? "dropTarget" : "",
               dragIndex === i ? "dragging" : "",
             ]
@@ -223,12 +241,33 @@ export function SongTable({
               e.stopPropagation();
               if (isDraggingRef.current) return;
 
-              const items = await buildMenu(t.id);   
+              const targetIds = getTargetTrackIds(t.id);
+
+              // if right-clicking an unselected row, make it the active selection
+              if (!isSelected(t.id)) {
+                dispatch({ type: "SET_SELECTED_TRACKS", trackIds: [t.id] });
+              }
+
+              const items = await buildMenu(targetIds);
+
               showContextMenu({
                 x: e.clientX,
                 y: e.clientY,
                 items,
               });
+            }}
+            onClick={(e) => {
+              if (isDraggingRef.current) return;
+
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                dispatch({ type: "TOGGLE_SELECTED_TRACK", trackId: t.id });
+                return;
+              }
+
+              // optional: normal click makes this the only selected row
+              dispatch({ type: "SET_SELECTED_TRACKS", trackIds: [t.id] });
             }}
           >
             <span
@@ -236,6 +275,7 @@ export function SongTable({
               draggable={!isEditing}
               onDragStart={(e) => {
                 if (isEditing) return;
+                const targetIds = getTargetTrackIds(t.id);
                 isDraggingRef.current = true;
                 setDragIndex(i);
                 setOverIndex(i);
@@ -243,7 +283,7 @@ export function SongTable({
                 e.dataTransfer.setData("text/plain", String(i));
                 e.dataTransfer.setData(
                   "application/x-musicx-track",
-                  dragPayloadFor(t.id)
+                  dragPayloadFor(targetIds)
                 );
                 document.body.style.cursor = "grabbing";
               }}

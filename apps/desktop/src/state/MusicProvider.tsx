@@ -18,7 +18,10 @@ type Action =
   | { type: "SET_LIBRARY_ORDER"; order: string[] }
   | { type: "REORDER_LIBRARY_ORDER"; from: number; to: number }
   | { type: "TOGGLE_QUEUE" }
-  | { type: "REMOVE_FROM_QUEUE"; index: number };
+  | { type: "REMOVE_FROM_QUEUE"; index: number }
+  | { type: "SET_SELECTED_TRACKS"; trackIds: string[] }
+  | { type: "TOGGLE_SELECTED_TRACK"; trackId: string }
+  | { type: "CLEAR_SELECTED_TRACKS" };
   
 
 const initialState: MusicState = {
@@ -39,6 +42,7 @@ const initialState: MusicState = {
     baseQueue: [],
     showQueue: false,
   },
+  selectedTrackIds: [],
 };
 
 function reducer(state: MusicState, action: Action): MusicState {
@@ -229,6 +233,32 @@ function reducer(state: MusicState, action: Action): MusicState {
         },
       };
     }
+
+    case "SET_SELECTED_TRACKS": {
+      return {
+        ...state,
+        selectedTrackIds: action.trackIds,
+      };
+    }
+
+    case "TOGGLE_SELECTED_TRACK": {
+      const exists = state.selectedTrackIds.includes(action.trackId);
+
+      return {
+        ...state,
+        selectedTrackIds: exists
+          ? state.selectedTrackIds.filter((id) => id !== action.trackId)
+          : [...state.selectedTrackIds, action.trackId],
+      };
+    }
+
+    case "CLEAR_SELECTED_TRACKS": {
+      return {
+        ...state,
+        selectedTrackIds: [],
+      };
+    }
+
     default:
       return state;
   }

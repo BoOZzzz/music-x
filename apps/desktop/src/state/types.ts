@@ -39,4 +39,5 @@ export type MusicState = {
   view: View;
   player: PlayerState;
   libraryOrder: string[];
+  selectedTrackIds: string[];
 };
