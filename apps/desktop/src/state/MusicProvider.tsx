@@ -187,12 +187,11 @@ function reducer(state: MusicState, action: Action): MusicState {
 
     case "REMOVE_FROM_QUEUE": {
       const { index } = action;
-      const { queue, queueIndex, currentTrackId } = state.player;
+      const { queue, queueIndex } = state.player;
 
       if (index < 0 || index >= queue.length) return state;
 
       const newQueue = queue.slice();
-      const removedId = newQueue.splice(index, 1)[0];
 
       let newIndex = queueIndex;
 
