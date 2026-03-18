@@ -1,5 +1,6 @@
 // songTable.tsx
 import { useMemo, useRef, useState } from "react";
+import type { PlaylistRow } from "@music-x/shared";
 import type { Track } from "../../state/types";
 import { useMusic } from "../../state/MusicProvider";
 import { fmtTime } from "../../state/utils";
@@ -8,12 +9,6 @@ import { useGlobalContextMenu } from "../ctxmenu/GlobalContextMenu";
 
 
 const LIBRARY_PLAYLIST_ID = "library";
-
-type PlaylistRow = {
-  id: string;
-  name: string;
-  created_at: number;
-};
 
 type SongTableProps = {
   tracks: Track[];

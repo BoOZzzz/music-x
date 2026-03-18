@@ -4,6 +4,11 @@ import electron from "vite-plugin-electron/simple";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@music-x/shared": path.resolve(__dirname, "../../packages/shared/src"),
+    },
+  },
   plugins: [
     react(),
     electron({

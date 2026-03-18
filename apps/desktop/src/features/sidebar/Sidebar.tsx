@@ -1,19 +1,12 @@
 // Sidebar.tsx
 import { useState, useEffect, useMemo } from "react";
+import type { PlaylistRow } from "@music-x/shared";
 import { useMusic } from "../../state/MusicProvider";
 import { useGlobalContextMenu } from "../ctxmenu/GlobalContextMenu";
 import type { ContextMenuItem } from "../ctxmenu/ContextMenu";
 import "../../css/sidebar.css";
 
-
-
 const LIBRARY_PLAYLIST_ID = "library";
-
-type PlaylistRow = {
-  id: string;
-  name: string;
-  created_at: number;
-};
 
 
 export function Sidebar() {

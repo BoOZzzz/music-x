@@ -25,6 +25,7 @@ export function LibraryPage() {
     const tracks: Track[] = items.map((it) => ({
       id: it.id,
       title: it.title,
+      source: "local",
       sourceUrl: toMusicxUrlFromFsPath(it.fs_path),
       addedAt: it.added_at,
       fsPath: it.fs_path,

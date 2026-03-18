@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { getDb } from "./db";
 import {
   insertTrack,
-  listTracks,
   getTrack,
   softDeleteTrack,
   upsertTrackByPath,
@@ -26,7 +25,6 @@ import {
   setPlaylistOrder,
   addTrackToPlaylistEnd,
   removeTrackFromPlaylist,
-  removeTrackFromAllPlaylists,
   listTracksForPlaylist,
   ensureTrackInPlaylist,
 } from "./db/playlist_tracks";

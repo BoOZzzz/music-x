@@ -1,6 +1,7 @@
 // --------- preload.ts ---------
 
 import { ipcRenderer, contextBridge } from 'electron'
+import type { MusicXAPI } from "@music-x/shared";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -44,71 +45,4 @@ contextBridge.exposeInMainWorld("musicx", {
   removeTrackFromPlaylist: (playlistId: string, trackId: string) =>
     ipcRenderer.invoke("musicx:removeTrackFromPlaylist", playlistId, trackId),
   openLibraryFolder: () => ipcRenderer.invoke("musicx:openLibraryDir"),
-});
-
-export type DbTrackRow = {
-  id: string;
-  title: string;
-  fs_path: string;
-  added_at: number;
-};
-
-export type PlaylistRow = {
-  id: string;
-  name: string;
-  created_at: number;
-};
-
-export type MusicXAPI = {
-  pickAudioFile: () => Promise<string | null>;
-  listLibraryTracks: () => Promise<DbTrackRow[]>;
-  importToLibrary: (fileUrl: string) => Promise<DbTrackRow>;
-  deleteTrack: (id: string) => Promise<{ ok: boolean; deleted: boolean; reason?: string }>;
-  rescanLibrary?: () => Promise<{
-    ok: boolean;
-    libraryDir: string;
-    scanned: number;
-    deleted: number;
-    tracks: DbTrackRow[];
-  }>;
-
-  updateTrackTitle: (
-    trackId: string,
-    title: string
-  ) => Promise<{ ok: boolean; changes: number; trackId: string; title: string }>;
-
-  listPlaylists: () => Promise<PlaylistRow[]>;
-
-  createPlaylist: (name: string) => Promise<
-    | { ok: true; playlist: PlaylistRow }
-    | { ok: false; reason: "missing_name" }
-  >;
-
-  renamePlaylist: (id: string, name: string) => Promise<
-    | { ok: true; changes: number }
-    | { ok: false; reason: "missing_id" | "missing_name" }
-  >;
-
-  deletePlaylist: (id: string) => Promise<
-    | { ok: true; changes: number }
-    | { ok: false; reason: "missing_id" }
-  >;
-
-  getPlaylistTrackIds: (playlistId: string) => Promise<string[]>;
-
-  setPlaylistOrder: (playlistId: string, order: string[]) => Promise<
-    | { ok: true }
-    | { ok: false; reason: "missing_playlist_id" | "invalid_order" }
-  >;
-
-  addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<
-    | { ok: true }
-    | { ok: false; reason: "missing_playlist_id" | "missing_track_id" }
-  >;
-
-  removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<
-    | { ok: true; changes: number }
-    | { ok: false; reason: "missing_playlist_id" | "missing_track_id" }
-  >;
-  openLibraryFolder: () => Promise<void>;
-};
+} satisfies MusicXAPI);
