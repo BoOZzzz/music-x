@@ -1,12 +1,8 @@
 // db/tracks.ts
 import { getDb } from "./index";
+import type { DbTrackRow } from "@music-x/shared";
 
-export type TrackRow = {
-  id: string;
-  title: string;
-  fs_path: string;
-  added_at: number;
-};
+export type TrackRow = DbTrackRow;
 
 export function listTracks(): TrackRow[] {
   return getDb()

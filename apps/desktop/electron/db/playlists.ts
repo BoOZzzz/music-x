@@ -1,12 +1,7 @@
 // db/playlists.ts
 import { getDb } from "./index";
 import { randomUUID } from "node:crypto";
-
-export type PlaylistRow = {
-  id: string;
-  name: string;
-  created_at: number;
-};
+import type { PlaylistRow } from "@music-x/shared";
 
 export const LIBRARY_PLAYLIST_ID = "library";
 
